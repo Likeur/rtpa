@@ -1,6 +1,6 @@
 {
   "name": "rtpa",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "main": "cli.js",
   "bin": {
     "rtpa": "cli.js",
