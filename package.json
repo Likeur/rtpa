@@ -20,7 +20,7 @@
     "url": "https://github.com/likeur/rtpa.git"
   },
   "license": "MIT",
-  "description": "",
+  "description": "RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simplify the creation of new web projects with **Tailwind CSS** already setup. It supports setting up both simple HTML/CSS projects, modern **Vite.js** based projects such as vanilla Js and Angular, with automatic Tailwind CSS integration.",
   "dependencies": {
     "@inquirer/prompts": "^7.8.2",
     "node-fetch": "^2.7.0"

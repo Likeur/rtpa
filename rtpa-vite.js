@@ -94,62 +94,58 @@ async function createAndPushToGitHub(
  * @param {string} projectPath The absolute path of the project.
  */
 function createSimpleHtmlCssProject(projectName, projectPath) {
-  
   console.log(`\nCréation du projet '${projectName}'...`);
 
-    process.chdir(projectPath);
+  process.chdir(projectPath);
 
-    // npm init 
-    console.log("📦 Initialisation de npm...");
-    execSync("npm init -y");
+  // npm init
+  console.log("📦 Initialisation de npm...");
+  execSync("npm init -y");
 
-    // dependancy installation
-    let dependencies = ["tailwindcss @tailwindcss/cli"];
-    console.log("🔧 Installation des dépendances de développement...");
-    execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
+  // dependancy installation
+  let dependencies = ["tailwindcss @tailwindcss/cli"];
+  console.log("🔧 Installation des dépendances de développement...");
+  execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
 
-    // Creation of base file structure
-    fs.mkdirSync(path.join(projectPath, "css"));
-    fs.mkdirSync(path.join(projectPath, "img"));
+  // Creation of base file structure
+  fs.mkdirSync(path.join(projectPath, "css"));
+  fs.mkdirSync(path.join(projectPath, "img"));
 
-    // Creation of the input.css file
-    fs.writeFileSync(
-      path.join(projectPath, "css", "input.css"),
-      `@import "tailwindcss"`
-    );
+  // Creation of the input.css file
+  fs.writeFileSync(
+    path.join(projectPath, "css", "input.css"),
+    `@import "tailwindcss"`
+  );
 
-    // Adding script
-    const scriptName = "start";
-    const scriptCommand =
-      "npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css --watch";
+  // Adding script
+  const scriptName = "start";
+  const scriptCommand =
+    "npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css --watch";
 
-    // path to package.json
-    const packageJsonPath = path.join(process.cwd(), "package.json");
+  // path to package.json
+  const packageJsonPath = path.join(process.cwd(), "package.json");
 
-    try {
-      const packageJsonData = fs.readFileSync(packageJsonPath, "utf-8");
-      const packageJson = JSON.parse(packageJsonData);
+  try {
+    const packageJsonData = fs.readFileSync(packageJsonPath, "utf-8");
+    const packageJson = JSON.parse(packageJsonData);
 
-      // verify if scripts section exist, if not we create one
-      if (!packageJson.scripts) {
-        packageJson.scripts = {};
-      }
-
-      // add new script for running tailwindcss server
-      packageJson.scripts[scriptName] = scriptCommand;
-
-      // rewrite package.json
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-
-      console.log(
-        `\n✅ Le script "${scriptName}" a été ajouté à votre package.json.`
-      );
-    } catch (error) {
-      console.error(
-        "❌ Erreur lors de la modification de package.json :",
-        error
-      );
+    // verify if scripts section exist, if not we create one
+    if (!packageJson.scripts) {
+      packageJson.scripts = {};
     }
+
+    // add new script for running tailwindcss server
+    packageJson.scripts[scriptName] = scriptCommand;
+
+    // rewrite package.json
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+
+    console.log(
+      `\n✅ Le script "${scriptName}" a été ajouté à votre package.json.`
+    );
+  } catch (error) {
+    console.error("❌ Erreur lors de la modification de package.json :", error);
+  }
 
   // index.html file
   fs.writeFileSync(
@@ -272,6 +268,75 @@ export default defineConfig({
   );
 }
 
+/**
+ * Creates an Angular project with Tailwind CSS v4.
+ * @param {string} projectName The name of the project.
+ * @param {string} projectPath The absolute path of the project.
+ */
+function createAngularTailwindProject(projectName, projectPath) {
+  console.log("📦 Creating Angular project...");
+
+  // Check if Angular CLI is installed
+  try {
+    execSync("ng v", { stdio: "ignore" });
+  } catch (error) {
+    console.warn(`
+❗ Angular CLI is not installed globally. Please install it first:
+   npm install -g @angular/cli
+   Then run this tool again.
+`);
+    process.exit(1);
+  }
+
+  // Create new Angular project
+  execSync(
+    `ng new ${projectName} --style=css --inline-style --skip-git --package-manager=npm`,
+    {
+      stdio: "inherit",
+    }
+  );
+
+  process.chdir(projectPath);
+
+  // Install Tailwind CSS dependencies
+  console.log("🔧 Installing Tailwind CSS dependencies for Angular...");
+  execSync("npm install tailwindcss @tailwindcss/postcss postcss --force", {
+    cwd: projectPath,
+    stdio: "inherit",
+  });
+
+  // Create .postcssrc.json file
+  console.log("⚙️ Creating .postcssrc.json file for PostCSS configuration...");
+  const postcssrcContent = `{
+  "plugins": {
+    "@tailwindcss/postcss": {}
+  }
+}`;
+  fs.writeFileSync(path.join(projectPath, ".postcssrc.json"), postcssrcContent);
+  console.log("✅ .postcssrc.json created successfully!");
+
+  // modifying src/style.css
+  const cssDirPath = path.join(projectPath, "src");
+  //   if (!fs.existsSync(cssDirPath)) {
+  //     fs.mkdirSync(cssDirPath);
+  //   }
+  fs.writeFileSync(path.join(cssDirPath, "styles.css"), `@import "tailwindcss"`);
+  console.log("✅ Tailwind CSS import added to src/styles.css.");
+
+
+  console.log(
+    "\n✅ Angular project with Tailwind CSS v4 created successfully!"
+  );
+  console.log("🚀 To get started, follow these steps:");
+  console.log(`1. Navigate to the folder: \`cd ${projectName}\``);
+  console.log(
+    "2. Launch the development server: `npm run start` or `ng serve`"
+  );
+  console.log(
+    "3. Open your browser at the address indicated by Angular (usually `http://localhost:4200/`)."
+  );
+}
+
 async function main() {
   try {
     let projectType;
@@ -281,6 +346,7 @@ async function main() {
     // Check for flags and potential project name
     const viteFlagIndex = args.indexOf("--js");
     const simpleFlagIndex = args.indexOf("--simple");
+    const angularFlagIndex = args.indexOf("--angular");
 
     if (viteFlagIndex !== -1) {
       projectType = "js";
@@ -306,6 +372,17 @@ async function main() {
       console.log(
         "Directly creating a Simple HTML/CSS project as requested by '--simple' argument (Not working for now)."
       );
+    } else if (angularFlagIndex !== -1) {
+      projectType = "angular";
+      if (
+        args.length > angularFlagIndex + 1 &&
+        !args[angularFlagIndex + 1].startsWith("--")
+      ) {
+        projectNameFromArgs = args[angularFlagIndex + 1];
+      }
+      console.log(
+        "Directly creating an Angular project as requested by '--angular' argument."
+      );
     } else {
       // If no specific argument, prompt the user for project type
       projectType = await select({
@@ -316,6 +393,12 @@ async function main() {
             value: "js",
             description:
               "Creates a modern project with Vite.js and configures Tailwind CSS via PostCSS.",
+          },
+          {
+            name: "Angular Project + Tailwind CSS v4",
+            value: "angular",
+            description:
+              "Creates an Angular project and integrates Tailwind CSS v4.",
           },
         ],
       });
@@ -340,6 +423,8 @@ async function main() {
         default:
           projectType === "js"
             ? "my-vite-tailwind-project"
+            : projectType === "angular"
+            ? "my-angular-tailwind-project"
             : "my-simple-tailwind-project",
         validate: (value) => {
           if (/^([A-Za-z0-9\-\_])+$/.test(value)) {
@@ -368,6 +453,8 @@ async function main() {
     } else if (projectType === "js") {
       // Vite handles folder creation, so we don't call fs.mkdirSync here
       createViteTailwindProject(projectName, projectPath);
+    } else if (projectType === "angular") {
+        createAngularTailwindProject(projectName, projectPath);
     } else {
       console.error("Unrecognized project type.");
       process.exit(1);

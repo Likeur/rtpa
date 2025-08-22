@@ -1,14 +1,18 @@
 # RTPA - Ready Tailwind CSS Project Assistant Creation Tool
 
-RTPA (Rapid Tailwind Project Assistant) is a command-line tool designed to simplify the creation of new web projects with **Tailwind CSS**. It supports setting up both simple HTML/CSS projects and modern **Vite.js** based projects, with automatic Tailwind CSS integration.
+RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simplify the creation of new web projects with **Tailwind CSS** already setup. It supports setting up both simple HTML/CSS projects, modern **Vite.js** based projects such as vanilla Js and Angular, with automatic Tailwind CSS integration.
+
+[![npm downloads](https://img.shields.io/npm/dt/rtpa)](https://www.npmjs.com/package/rtpa)
 
 ## Features
 
-* **Fast Project Creation:** Launch a new static HTML/CSS project or a Vite.js project in seconds.
+* **Fast Project Creation:** Launch a new static HTML/CSS project or a Vite.js project or an Angular project in seconds.
 
 * **Tailwind CSS Integration:** Automatically configures Tailwind CSS for your project.
 
 * **Vite.js Option:** Sets up Vite.js with the Tailwind CSS plugin for a modern development experience.
+
+* **Angular Option:** Sets up an Angular project with Tailwind CSS integration.
 
 * **Command Line Arguments:** Specify project type and name directly from the command line.
 
@@ -45,18 +49,24 @@ Run the command without any arguments to choose the project type and name via in
 rtpa
 ```
 
-- for vite vanilla js project 
+- for vite vanilla js or Angular project 
 ```bash
 rtpavite
 ```
 
 2. **Direct project creation**
-Use the `--js` flags to directly specify the project type. You can also provide the project name immediately after the flag.
+Use the `--js` or `--angular` flags to directly specify the project type. You can also provide the project name immediately after the flag.
 
-- Create a vite project:
+- Create a **Vite Vanilla Js** project:
 
 ```bash
 rtpavite --js project-name
+```
+
+- Create an **Angular** project
+
+```bash
+rtpavite --angular project-name
 ```
 
 if `project-name` is omitted, the tool will prompt you for it.
