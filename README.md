@@ -1,18 +1,25 @@
 # RTPA - Ready Tailwind CSS Project Assistant Creation Tool
 
-RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simplify the creation of new web projects with **Tailwind CSS** already setup. It supports setting up both simple HTML/CSS projects, modern **Vite.js** based projects such as vanilla Js and Angular, with automatic Tailwind CSS integration.
+RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simplify the creation of new web projects with **Tailwind CSS** already setup. It supports setting up both simple HTML/CSS projects, modern **Vite.js** based projects such as vanilla Js and **Angular** based project, with automatic Tailwind CSS integration while offering the option to automatically publish it directly to your github.
 
 [![npm downloads](https://img.shields.io/npm/dt/rtpa)](https://www.npmjs.com/package/rtpa)
+![Rtpa](https://img.shields.io/badge/tailwind-css-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
+![Licence](https://img.shields.io/badge/licence-MIT-green?style=for-the-badge)
 
 ## Features
 
-* **Fast Project Creation:** Launch a new static HTML/CSS project or a Vite.js project or an Angular project in seconds.
+* **Fast Project Creation:** Launch a new :
 
-* **Tailwind CSS Integration:** Automatically configures Tailwind CSS for your project.
+    - Simple **HTML/CSS** project.
 
-* **Vite.js Option:** Sets up Vite.js with the Tailwind CSS plugin for a modern development experience.
+    - Modern project with **Vite (Vanilla JS)**.
 
-* **Angular Option:** Sets up an Angular project with Tailwind CSS integration.
+    - Project with the **Angular framework**.
+
+* **Tailwind CSS Integration:** Automatically configures Tailwind CSS v4 for your project adapted on your choosen type.
+
+* **Automatic configuration of a linter and a formatter** (ESLint and Prettier), ensuring code quality and consistency from the start.
 
 * **Command Line Arguments:** Specify project type and name directly from the command line.
 
@@ -24,7 +31,7 @@ RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simpl
 
 To use RTPA, you need Node.js and npm (or Yarn/pnpm) installed on your machine.
 
-### Global Installation (Recommended)
+### Global Installation (Optionnal)
 
 Using npm : you can install it globally:
 
@@ -44,34 +51,58 @@ You can use RTPA in several ways:
 1. **interactive mode**
 Run the command without any arguments to choose the project type and name via interactive prompts:
 
-- for simple HTML/CSS project
 ```bash
 rtpa
-```
-
-- for vite vanilla js or Angular project 
-```bash
-rtpavite
 ```
 
 2. **Direct project creation**
 Use the `--js` or `--angular` flags to directly specify the project type. You can also provide the project name immediately after the flag.
 
+- Create a **simple html/css** project:
+
+```bash
+rtpa --simple project-name
+```
+
 - Create a **Vite Vanilla Js** project:
 
 ```bash
-rtpavite --js project-name
+rtpa --js project-name
 ```
 
 - Create an **Angular** project
 
 ```bash
-rtpavite --angular project-name
+rtpa --angular project-name
 ```
 
 if `project-name` is omitted, the tool will prompt you for it.
-Exemple `rtpavite --js my-vite-app`
+Exemple `rtpa --js my-vite-app`
 
+### Usage with npx (Without global installation)
+
+If you prefer not to install the tool globally, you can use npx to run it directly. This will download and execute the tool without installing it permanently on your system.
+
+To use ``npx``, simply prepend ``npx`` to the command:
+```bash
+npx rtpa
+```
+
+The interactive shell will then guide you through the project creation process. You can also use the command-line arguments with npx:
+
+```bash
+npx rtpa --simple [project-name]
+```
+```bash
+npx rtpa --js [project-name]
+```
+```bash
+npx rtpa --angular [project-name]
+```
+
+## Linter and Formatter Configuration
+
+After your project is created, the tool will ask if you want to integrate a linter and a formatter. If you choose to, it will automatically install ESLint and Prettier and set up their basic configuration files (``.eslintrc.js`` and ``.prettierrc.json``). This ensures code consistency and helps catch errors early in the development process.
 
 ## Github Configuration
 

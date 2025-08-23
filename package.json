@@ -3,8 +3,8 @@
   "version": "2.4.0",
   "main": "cli.js",
   "bin": {
-    "rtpa": "cli.js",
-    "rtpavite": "rtpa-vite.js"
+    "rtpa": "rtpa-vite.js"
+    
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -13,8 +13,8 @@ console.log(
         *********     ************   **********      *****
         ***    ***         ***       ***    ***     *** ***
         *********          ***       *********     ***   ***
-        *******            ***       ******       ***********
-        ***  ***           ***       ***          *********** 
+        *******            ***       ******       *********** // Simple HTML/CSS
+        ***  ***           ***       ***          *********** // Angular
         ***   ***          ***       ***          ***     *** // vite
         ***    ***         ***       ***          ***     *** (@by likeur)
     `
@@ -106,17 +106,18 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
   let dependencies = ["tailwindcss @tailwindcss/cli"];
   console.log("🔧 Installation des dépendances de développement...");
   execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
-
+  
   // Creation of base file structure
   fs.mkdirSync(path.join(projectPath, "css"));
   fs.mkdirSync(path.join(projectPath, "img"));
-
+  
   // Creation of the input.css file
   fs.writeFileSync(
     path.join(projectPath, "css", "input.css"),
     `@import "tailwindcss"`
   );
-
+  
+  
   // Adding script
   const scriptName = "start";
   const scriptCommand =
@@ -174,6 +175,8 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
         </body>
         </html>`
   );
+  //first execution of the @tailwindcss/cli script to generate the output.css file
+  execSync(`npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css`, { stdio: "inherit" });
 
   console.log(
     "\n✅ Simple HTML/CSS project with Tailwind CSS created successfully!"
@@ -337,6 +340,75 @@ function createAngularTailwindProject(projectName, projectPath) {
   );
 }
 
+/**
+ * Adds and configures a linter and formatter to the project.
+ * @param {string} projectPath The absolute path of the project.
+ */
+async function addLinterAndFormatter(projectPath) {
+    const wantLinting = await confirm({
+        message: "Do you want to add a linter (ESLint) and a formatter (Prettier) to your project?",
+        default: true,
+    });
+
+    if (wantLinting) {
+        console.log("\n🔧 Configuring ESLint and Prettier...");
+
+        // Install dependencies
+        const devDependencies = ["eslint", "prettier", "eslint-config-prettier"];
+        console.log("📦 Installing ESLint and Prettier...");
+        execSync(`npm install -D ${devDependencies.join(" ")}`, {
+            cwd: projectPath,
+            stdio: "inherit",
+        });
+
+        // Create .eslintrc.js
+        console.log("📝 Creating .eslintrc.js configuration file...");
+        const eslintConfigContent = `module.exports = {
+    env: {
+        browser: true,
+        es2021: true,
+        node: true,
+    },
+    extends: [
+        'eslint:recommended',
+        'prettier',
+    ],
+    parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+    },
+    rules: {
+        // Add your custom rules here
+    },
+};
+`;
+        fs.writeFileSync(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
+
+        // Create .prettierrc.json
+        console.log("📝 Creating .prettierrc.json configuration file...");
+        const prettierConfigContent = `{
+    "semi": true,
+    "tabWidth": 2,
+    "printWidth": 80,
+    "singleQuote": true,
+    "trailingComma": "es5"
+}`;
+        fs.writeFileSync(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
+        
+        // Update .gitignore
+        const gitignorePath = path.join(projectPath, '.gitignore');
+        let gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+        gitignoreContent += `
+# Linter and Formatter
+.eslintcache
+`;
+        fs.writeFileSync(gitignorePath, gitignoreContent);
+
+        console.log("✅ ESLint and Prettier have been successfully configured!");
+    }
+}
+
+
 async function main() {
   try {
     let projectType;
@@ -388,6 +460,12 @@ async function main() {
       projectType = await select({
         message: "Which type of project do you want to create?",
         choices: [
+          {
+            name: "Simple HTML/CSS Project + Tailwind CSS",
+            value: "simple",
+            description:
+              "Creates a basic HTML/CSS project with Tailwind CSS via CLI.",
+          },
           {
             name: "Vite js (Vanilla JS) Project + Tailwind CSS",
             value: "js",
@@ -467,6 +545,9 @@ async function main() {
     const gitignoreContent = `/node_modules\n/dist\n/.env\n`; // Added /dist and /.env for Vite projects
     fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignoreContent);
 
+    // Linter and Formatter
+    await addLinterAndFormatter(projectPath);
+
     const connectToGitHub = await confirm({
       message:
         "Do you want to create a GitHub repository for this project and push the code?",
@@ -506,6 +587,14 @@ async function main() {
         console.log("2. Launch the development server: `npm run dev`");
         console.log(
           "3. Open your browser at the address indicated by Vite (usually `http://localhost:5173/`)."
+        );
+      } else if (projectType === "angular") {
+        console.log("\n✅ Project created successfully!");
+        console.log("🚀 To get started, follow these steps:");
+        console.log(`1. Navigate to the folder: \`cd ${projectName}\``);
+        console.log("2. Launch the development server: `npm run start` or `ng serve`");
+        console.log(
+          "3. Open your browser at the address indicated by Angular (usually `http://localhost:4200/`)."
         );
       }
     }
