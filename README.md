@@ -4,7 +4,7 @@ RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simpl
 
 [![npm downloads](https://img.shields.io/npm/dt/rtpa)](https://www.npmjs.com/package/rtpa)
 ![Rtpa](https://img.shields.io/badge/tailwind-css-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
+[![npm version](https://img.shields.io/npm/v/rtpa.svg)](https://www.npmjs.com/package/rtpa)
 ![Licence](https://img.shields.io/badge/licence-MIT-green?style=for-the-badge)
 
 ## Features
