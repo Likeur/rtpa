@@ -1,10 +1,9 @@
 {
   "name": "rtpa",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "main": "cli.js",
   "bin": {
     "rtpa": "rtpa-vite.js"
-    
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
