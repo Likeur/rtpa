@@ -67,12 +67,18 @@ async function createAndPushToGitHub(
       }),
     });
 
+    // Github API error handling
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to create GitHub repository: ${response.status} - ${errorText}`
-      );
+      let errorMessage = `GitHub API error (${response.status})`;
+      try {
+        const errorJson = await response.json();
+        errorMessage += `: ${errorJson.message}`;
+      } catch {
+        errorMessage += `: ${await response.text()}`;
+      }
+      throw new Error(errorMessage);
     }
+
 
     const repoData = await response.json();
     const repoUrl = repoData.clone_url;
