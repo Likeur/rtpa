@@ -591,18 +591,38 @@ async function main() {
     }
 
     // Project creation logic based on type
-    if (projectType === "simple") {
-      safeMkdir(projectPath);
-      createSimpleHtmlCssProject(projectName, projectPath);
-    } else if (projectType === "js") {
-      // Vite handles folder creation, so we don't call fs.mkdirSync here
-      createViteTailwindProject(projectName, projectPath);
-    } else if (projectType === "angular") {
+
+    // Track if projectPath was created for rollback
+    let projectPathCreated = false;
+    try {
+      // Create base project directory when needed
+      if (projectType === "simple") {
+        safeMkdir(projectPath);
+        projectPathCreated = true;
+        createSimpleHtmlCssProject(projectName, projectPath);
+
+      } else if (projectType === "js") {
+        // Vite creates the folder itself
+        createViteTailwindProject(projectName, projectPath);
+        projectPathCreated = true;
+
+      } else if (projectType === "angular") {
+        // Angular CLI creates the folder itself
         createAngularTailwindProject(projectName, projectPath);
-    } else {
-      console.error("Unrecognized project type.");
-      process.exit(1);
+        projectPathCreated = true;
+
+      } else {
+        throw new Error("Unrecognized project type.");
+      }
+
+    } catch (error) {
+      if (projectPathCreated && fs.existsSync(projectPath)) {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+        console.log("Rollback: project directory removed.");
+      }
+      throw error; // VERY IMPORTANT: rethrow to main catch
     }
+
 
     // Initialize git and connect to GitHub (common to both project types)
     console.log("🌱 Initializing Git repository...");
