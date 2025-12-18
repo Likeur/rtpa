@@ -7,6 +7,43 @@ const path = require("path");
 const fs = require("fs");
 const fetch = require("node-fetch");
 
+// Adding safe command execution wrapper
+function runCommand(command, options = {}) {
+  try {
+    execSync(command, {
+      stdio: "inherit",
+      ...options,
+    });
+  } catch (error) {
+    console.error(`\nCommand failed: ${command}`);
+    if (error.stderr) {
+      console.error(error.stderr.toString());
+    }
+    throw new Error(`Execution failed: ${command}`);
+  }
+}
+
+// File system safe operations
+function safeWriteFile(filePath, content) {
+  try {
+    fs.writeFileSync(filePath, content);
+  } catch (error) {
+    console.error(`Failed to write file: ${filePath}`);
+    throw error;
+  }
+}
+
+function safeMkdir(dirPath) {
+  try {
+    fs.mkdirSync(dirPath, { recursive: true });
+  } catch (error) {
+    console.error(`Failed to create directory: ${dirPath}`);
+    throw error;
+  }
+}
+
+
+
 console.log(
   `
         *******       ************   ********         **
@@ -50,12 +87,18 @@ async function createAndPushToGitHub(
       }),
     });
 
+    // Github API error handling
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Failed to create GitHub repository: ${response.status} - ${errorText}`
-      );
+      let errorMessage = `GitHub API error (${response.status})`;
+      try {
+        const errorJson = await response.json();
+        errorMessage += `: ${errorJson.message}`;
+      } catch {
+        errorMessage += `: ${await response.text()}`;
+      }
+      throw new Error(errorMessage);
     }
+
 
     const repoData = await response.json();
     const repoUrl = repoData.clone_url;
@@ -64,13 +107,13 @@ async function createAndPushToGitHub(
     console.log("✅ GitHub repository created successfully!");
 
     console.log("⏳ Preparing first commit...");
-    execSync("git add .");
-    execSync('git commit -m "feat: initial project setup"');
+    runCommand("git add .");
+    runCommand('git commit -m "feat: initial project setup"');
 
     console.log("⏳ Pushing project to GitHub...");
-    execSync(`git remote add origin ${repoUrl}`);
-    execSync("git branch -M main");
-    execSync("git push -u origin main");
+    runCommand(`git remote add origin ${repoUrl}`);
+    runCommand("git branch -M main");
+    runCommand("git push -u origin main");
 
     console.log(`\n🎉 Project pushed to GitHub successfully!`);
     console.log(
@@ -100,19 +143,19 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
 
   // npm init
   console.log("📦 Initialisation de npm...");
-  execSync("npm init -y");
+  runCommand("npm init -y");
 
   // dependancy installation
   let dependencies = ["tailwindcss @tailwindcss/cli"];
   console.log("🔧 Installation des dépendances de développement...");
-  execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
+  runCommand(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
   
   // Creation of base file structure
-  fs.mkdirSync(path.join(projectPath, "css"));
-  fs.mkdirSync(path.join(projectPath, "img"));
+  safeMkdir(path.join(projectPath, "css"));
+  safeMkdir(path.join(projectPath, "img"));
   
   // Creation of the input.css file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "css", "input.css"),
     `@import "tailwindcss"`
   );
@@ -139,7 +182,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
     packageJson.scripts[scriptName] = scriptCommand;
 
     // rewrite package.json
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    safeWriteFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     console.log(
       `\n✅ Le script "${scriptName}" a été ajouté à votre package.json.`
@@ -149,7 +192,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
   }
 
   // index.html file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "index.html"),
     `<!doctype html>
         <html lang="en">
@@ -176,7 +219,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
         </html>`
   );
   //first execution of the @tailwindcss/cli script to generate the output.css file
-  execSync(`npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css`, { stdio: "inherit" });
+  runCommand(`npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css`, { stdio: "inherit" });
 
   console.log(
     "\n✅ Simple HTML/CSS project with Tailwind CSS created successfully!"
@@ -194,7 +237,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
  */
 function createViteTailwindProject(projectName, projectPath) {
   console.log("📦 Creating Vite project (Vanilla JavaScript)...");
-  execSync(`npm create vite@latest ${projectName} -- --template vanilla`, {
+  runCommand(`npm create vite@latest ${projectName} -- --template vanilla`, {
     stdio: "inherit",
   });
 
@@ -203,7 +246,7 @@ function createViteTailwindProject(projectName, projectPath) {
 
   let dependencies = ["tailwindcss @tailwindcss/vite"];
   console.log("🔧 Installing development dependencies (@tailwindcss/vite)...");
-  execSync(`npm install -D ${dependencies.join(" ")}`, {
+  runCommand(`npm install -D ${dependencies.join(" ")}`, {
     cwd: projectPath,
     stdio: "inherit",
   });
@@ -219,20 +262,20 @@ export default defineConfig({
   ],
 })
 `;
-  fs.writeFileSync(path.join(projectPath, "vite.config.js"), viteConfigContent);
+  safeWriteFile(path.join(projectPath, "vite.config.js"), viteConfigContent);
   console.log("✅ vite.config.js created successfully!");
 
   // modifying src/style.css
   const cssDirPath = path.join(projectPath, "src");
   //   if (!fs.existsSync(cssDirPath)) {
-  //     fs.mkdirSync(cssDirPath);
+  //     safeMkdir(cssDirPath);
   //   }
-  fs.writeFileSync(path.join(cssDirPath, "style.css"), `@import "tailwindcss"`);
+  safeWriteFile(path.join(cssDirPath, "style.css"), `@import "tailwindcss"`);
 
   // Modify index.html to include the new CSS link and example content
 
   // index.html file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "index.html"),
     `<!DOCTYPE html>
 <html lang="fr">
@@ -281,7 +324,7 @@ function createAngularTailwindProject(projectName, projectPath) {
 
   // Check if Angular CLI is installed
   try {
-    execSync("ng v", { stdio: "ignore" });
+    runCommand("ng v", { stdio: "ignore" });
   } catch (error) {
     console.warn(`
 ❗ Angular CLI is not installed globally. Please install it first:
@@ -292,7 +335,7 @@ function createAngularTailwindProject(projectName, projectPath) {
   }
 
   // Create new Angular project
-  execSync(
+  runCommand(
     `ng new ${projectName} --style=css --inline-style --skip-git --package-manager=npm`,
     {
       stdio: "inherit",
@@ -303,7 +346,7 @@ function createAngularTailwindProject(projectName, projectPath) {
 
   // Install Tailwind CSS dependencies
   console.log("🔧 Installing Tailwind CSS dependencies for Angular...");
-  execSync("npm install tailwindcss @tailwindcss/postcss postcss --force", {
+  runCommand("npm install tailwindcss @tailwindcss/postcss postcss --force", {
     cwd: projectPath,
     stdio: "inherit",
   });
@@ -315,15 +358,15 @@ function createAngularTailwindProject(projectName, projectPath) {
     "@tailwindcss/postcss": {}
   }
 }`;
-  fs.writeFileSync(path.join(projectPath, ".postcssrc.json"), postcssrcContent);
+  safeWriteFile(path.join(projectPath, ".postcssrc.json"), postcssrcContent);
   console.log("✅ .postcssrc.json created successfully!");
 
   // modifying src/style.css
   const cssDirPath = path.join(projectPath, "src");
   //   if (!fs.existsSync(cssDirPath)) {
-  //     fs.mkdirSync(cssDirPath);
+  //     safeMkdir(cssDirPath);
   //   }
-  fs.writeFileSync(path.join(cssDirPath, "styles.css"), `@import "tailwindcss"`);
+  safeWriteFile(path.join(cssDirPath, "styles.css"), `@import "tailwindcss"`);
   console.log("✅ Tailwind CSS import added to src/styles.css.");
 
 
@@ -356,7 +399,7 @@ async function addLinterAndFormatter(projectPath) {
         // Install dependencies
         const devDependencies = ["eslint", "prettier", "eslint-config-prettier"];
         console.log("📦 Installing ESLint and Prettier...");
-        execSync(`npm install -D ${devDependencies.join(" ")}`, {
+        runCommand(`npm install -D ${devDependencies.join(" ")}`, {
             cwd: projectPath,
             stdio: "inherit",
         });
@@ -382,7 +425,7 @@ async function addLinterAndFormatter(projectPath) {
     },
 };
 `;
-        fs.writeFileSync(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
+        safeWriteFile(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
 
         // Create .prettierrc.json
         console.log("📝 Creating .prettierrc.json configuration file...");
@@ -393,7 +436,7 @@ async function addLinterAndFormatter(projectPath) {
     "singleQuote": true,
     "trailingComma": "es5"
 }`;
-        fs.writeFileSync(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
+        safeWriteFile(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
         
         // Update .gitignore
         const gitignorePath = path.join(projectPath, '.gitignore');
@@ -402,15 +445,36 @@ async function addLinterAndFormatter(projectPath) {
 # Linter and Formatter
 .eslintcache
 `;
-        fs.writeFileSync(gitignorePath, gitignoreContent);
+        safeWriteFile(gitignorePath, gitignoreContent);
 
         console.log("✅ ESLint and Prettier have been successfully configured!");
     }
 }
 
+// Environment checks
+function checkEnvironment() {
+  const checks = [
+    { cmd: "node -v", name: "Node.js" },
+    { cmd: "git --version", name: "Git" },
+    { cmd: "npm -v", name: "npm" },
+  ];
+
+  for (const check of checks) {
+    try {
+      execSync(check.cmd, { stdio: "ignore" });
+    } catch {
+      console.error(`${check.name} is not installed or not accessible.`);
+      process.exit(1);
+    }
+  }
+}
+
 
 async function main() {
   try {
+    // Calling environment checks func
+    checkEnvironment();
+
     let projectType;
     let projectNameFromArgs = null;
     const args = process.argv.slice(2); // Get command line arguments
@@ -492,7 +556,9 @@ async function main() {
         console.error(
           `❌ Error: Invalid project name provided via argument: '${projectNameFromArgs}'. Project name must contain only letters, numbers, hyphens, and underscores.`
         );
-        process.exit(1);
+        // Throw an error if the project name is invalid
+        throw new Error("Invalid project name. Use only letters, numbers, hyphens, or underscores.");
+
       }
     } else {
       // If no project name was provided via arguments, prompt the user
@@ -525,25 +591,45 @@ async function main() {
     }
 
     // Project creation logic based on type
-    if (projectType === "simple") {
-      fs.mkdirSync(projectPath);
-      createSimpleHtmlCssProject(projectName, projectPath);
-    } else if (projectType === "js") {
-      // Vite handles folder creation, so we don't call fs.mkdirSync here
-      createViteTailwindProject(projectName, projectPath);
-    } else if (projectType === "angular") {
+
+    // Track if projectPath was created for rollback
+    let projectPathCreated = false;
+    try {
+      // Create base project directory when needed
+      if (projectType === "simple") {
+        safeMkdir(projectPath);
+        projectPathCreated = true;
+        createSimpleHtmlCssProject(projectName, projectPath);
+
+      } else if (projectType === "js") {
+        // Vite creates the folder itself
+        createViteTailwindProject(projectName, projectPath);
+        projectPathCreated = true;
+
+      } else if (projectType === "angular") {
+        // Angular CLI creates the folder itself
         createAngularTailwindProject(projectName, projectPath);
-    } else {
-      console.error("Unrecognized project type.");
-      process.exit(1);
+        projectPathCreated = true;
+
+      } else {
+        throw new Error("Unrecognized project type.");
+      }
+
+    } catch (error) {
+      if (projectPathCreated && fs.existsSync(projectPath)) {
+        fs.rmSync(projectPath, { recursive: true, force: true });
+        console.log("Rollback: project directory removed.");
+      }
+      throw error; // VERY IMPORTANT: rethrow to main catch
     }
+
 
     // Initialize git and connect to GitHub (common to both project types)
     console.log("🌱 Initializing Git repository...");
-    execSync("git init", { cwd: projectPath }); // Ensure git init is in the new project path
+    runCommand("git init", { cwd: projectPath }); // Ensure git init is in the new project path
 
     const gitignoreContent = `/node_modules\n/dist\n/.env\n`; // Added /dist and /.env for Vite projects
-    fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignoreContent);
+    safeWriteFile(path.join(projectPath, ".gitignore"), gitignoreContent);
 
     // Linter and Formatter
     await addLinterAndFormatter(projectPath);
@@ -605,7 +691,11 @@ async function main() {
         "❌ Error: The current environment does not support interactive prompts. Please run this in a compatible terminal (e.g., Bash, Zsh, PowerShell)."
       );
     } else {
-      console.error("❌ An unexpected error occurred:", error);
+      // Handle unexpected errors
+      console.error("\nRTPA failed to complete the operation.");
+      console.error(`Reason: ${error.message}`);
+      console.error("Tip: Check your environment and try again.\n");
+      process.exit(1);
     }
   }
 }
