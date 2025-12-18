@@ -431,9 +431,30 @@ async function addLinterAndFormatter(projectPath) {
     }
 }
 
+// Environment checks
+function checkEnvironment() {
+  const checks = [
+    { cmd: "node -v", name: "Node.js" },
+    { cmd: "git --version", name: "Git" },
+    { cmd: "npm -v", name: "npm" },
+  ];
+
+  for (const check of checks) {
+    try {
+      execSync(check.cmd, { stdio: "ignore" });
+    } catch {
+      console.error(`${check.name} is not installed or not accessible.`);
+      process.exit(1);
+    }
+  }
+}
+
 
 async function main() {
   try {
+    // Calling environment checks func
+    checkEnvironment();
+    
     let projectType;
     let projectNameFromArgs = null;
     const args = process.argv.slice(2); // Get command line arguments
