@@ -7,6 +7,23 @@ const path = require("path");
 const fs = require("fs");
 const fetch = require("node-fetch");
 
+// Adding safe command execution wrapper
+function runCommand(command, options = {}) {
+  try {
+    execSync(command, {
+      stdio: "inherit",
+      ...options,
+    });
+  } catch (error) {
+    console.error(`\nCommand failed: ${command}`);
+    if (error.stderr) {
+      console.error(error.stderr.toString());
+    }
+    throw new Error(`Execution failed: ${command}`);
+  }
+}
+
+
 console.log(
   `
         *******       ************   ********         **
@@ -64,13 +81,13 @@ async function createAndPushToGitHub(
     console.log("✅ GitHub repository created successfully!");
 
     console.log("⏳ Preparing first commit...");
-    execSync("git add .");
-    execSync('git commit -m "feat: initial project setup"');
+    runCommand("git add .");
+    runCommand('git commit -m "feat: initial project setup"');
 
     console.log("⏳ Pushing project to GitHub...");
-    execSync(`git remote add origin ${repoUrl}`);
-    execSync("git branch -M main");
-    execSync("git push -u origin main");
+    runCommand(`git remote add origin ${repoUrl}`);
+    runCommand("git branch -M main");
+    runCommand("git push -u origin main");
 
     console.log(`\n🎉 Project pushed to GitHub successfully!`);
     console.log(
@@ -100,12 +117,12 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
 
   // npm init
   console.log("📦 Initialisation de npm...");
-  execSync("npm init -y");
+  runCommand("npm init -y");
 
   // dependancy installation
   let dependencies = ["tailwindcss @tailwindcss/cli"];
   console.log("🔧 Installation des dépendances de développement...");
-  execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
+  runCommand(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
   
   // Creation of base file structure
   fs.mkdirSync(path.join(projectPath, "css"));
@@ -176,7 +193,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
         </html>`
   );
   //first execution of the @tailwindcss/cli script to generate the output.css file
-  execSync(`npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css`, { stdio: "inherit" });
+  runCommand(`npx @tailwindcss/cli -i ./css/input.css -o ./css/output.css`, { stdio: "inherit" });
 
   console.log(
     "\n✅ Simple HTML/CSS project with Tailwind CSS created successfully!"
@@ -194,7 +211,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
  */
 function createViteTailwindProject(projectName, projectPath) {
   console.log("📦 Creating Vite project (Vanilla JavaScript)...");
-  execSync(`npm create vite@latest ${projectName} -- --template vanilla`, {
+  runCommand(`npm create vite@latest ${projectName} -- --template vanilla`, {
     stdio: "inherit",
   });
 
@@ -203,7 +220,7 @@ function createViteTailwindProject(projectName, projectPath) {
 
   let dependencies = ["tailwindcss @tailwindcss/vite"];
   console.log("🔧 Installing development dependencies (@tailwindcss/vite)...");
-  execSync(`npm install -D ${dependencies.join(" ")}`, {
+  runCommand(`npm install -D ${dependencies.join(" ")}`, {
     cwd: projectPath,
     stdio: "inherit",
   });
@@ -281,7 +298,7 @@ function createAngularTailwindProject(projectName, projectPath) {
 
   // Check if Angular CLI is installed
   try {
-    execSync("ng v", { stdio: "ignore" });
+    runCommand("ng v", { stdio: "ignore" });
   } catch (error) {
     console.warn(`
 ❗ Angular CLI is not installed globally. Please install it first:
@@ -292,7 +309,7 @@ function createAngularTailwindProject(projectName, projectPath) {
   }
 
   // Create new Angular project
-  execSync(
+  runCommand(
     `ng new ${projectName} --style=css --inline-style --skip-git --package-manager=npm`,
     {
       stdio: "inherit",
@@ -303,7 +320,7 @@ function createAngularTailwindProject(projectName, projectPath) {
 
   // Install Tailwind CSS dependencies
   console.log("🔧 Installing Tailwind CSS dependencies for Angular...");
-  execSync("npm install tailwindcss @tailwindcss/postcss postcss --force", {
+  runCommand("npm install tailwindcss @tailwindcss/postcss postcss --force", {
     cwd: projectPath,
     stdio: "inherit",
   });
@@ -356,7 +373,7 @@ async function addLinterAndFormatter(projectPath) {
         // Install dependencies
         const devDependencies = ["eslint", "prettier", "eslint-config-prettier"];
         console.log("📦 Installing ESLint and Prettier...");
-        execSync(`npm install -D ${devDependencies.join(" ")}`, {
+        runCommand(`npm install -D ${devDependencies.join(" ")}`, {
             cwd: projectPath,
             stdio: "inherit",
         });
@@ -540,7 +557,7 @@ async function main() {
 
     // Initialize git and connect to GitHub (common to both project types)
     console.log("🌱 Initializing Git repository...");
-    execSync("git init", { cwd: projectPath }); // Ensure git init is in the new project path
+    runCommand("git init", { cwd: projectPath }); // Ensure git init is in the new project path
 
     const gitignoreContent = `/node_modules\n/dist\n/.env\n`; // Added /dist and /.env for Vite projects
     fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignoreContent);
