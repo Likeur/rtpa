@@ -23,6 +23,26 @@ function runCommand(command, options = {}) {
   }
 }
 
+// File system safe operations
+function safeWriteFile(filePath, content) {
+  try {
+    fs.writeFileSync(filePath, content);
+  } catch (error) {
+    console.error(`Failed to write file: ${filePath}`);
+    throw error;
+  }
+}
+
+function safeMkdir(dirPath) {
+  try {
+    fs.mkdirSync(dirPath, { recursive: true });
+  } catch (error) {
+    console.error(`Failed to create directory: ${dirPath}`);
+    throw error;
+  }
+}
+
+
 
 console.log(
   `
@@ -131,11 +151,11 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
   runCommand(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
   
   // Creation of base file structure
-  fs.mkdirSync(path.join(projectPath, "css"));
-  fs.mkdirSync(path.join(projectPath, "img"));
+  safeMkdir(path.join(projectPath, "css"));
+  safeMkdir(path.join(projectPath, "img"));
   
   // Creation of the input.css file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "css", "input.css"),
     `@import "tailwindcss"`
   );
@@ -162,7 +182,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
     packageJson.scripts[scriptName] = scriptCommand;
 
     // rewrite package.json
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    safeWriteFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     console.log(
       `\n✅ Le script "${scriptName}" a été ajouté à votre package.json.`
@@ -172,7 +192,7 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
   }
 
   // index.html file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "index.html"),
     `<!doctype html>
         <html lang="en">
@@ -242,20 +262,20 @@ export default defineConfig({
   ],
 })
 `;
-  fs.writeFileSync(path.join(projectPath, "vite.config.js"), viteConfigContent);
+  safeWriteFile(path.join(projectPath, "vite.config.js"), viteConfigContent);
   console.log("✅ vite.config.js created successfully!");
 
   // modifying src/style.css
   const cssDirPath = path.join(projectPath, "src");
   //   if (!fs.existsSync(cssDirPath)) {
-  //     fs.mkdirSync(cssDirPath);
+  //     safeMkdir(cssDirPath);
   //   }
-  fs.writeFileSync(path.join(cssDirPath, "style.css"), `@import "tailwindcss"`);
+  safeWriteFile(path.join(cssDirPath, "style.css"), `@import "tailwindcss"`);
 
   // Modify index.html to include the new CSS link and example content
 
   // index.html file
-  fs.writeFileSync(
+  safeWriteFile(
     path.join(projectPath, "index.html"),
     `<!DOCTYPE html>
 <html lang="fr">
@@ -338,15 +358,15 @@ function createAngularTailwindProject(projectName, projectPath) {
     "@tailwindcss/postcss": {}
   }
 }`;
-  fs.writeFileSync(path.join(projectPath, ".postcssrc.json"), postcssrcContent);
+  safeWriteFile(path.join(projectPath, ".postcssrc.json"), postcssrcContent);
   console.log("✅ .postcssrc.json created successfully!");
 
   // modifying src/style.css
   const cssDirPath = path.join(projectPath, "src");
   //   if (!fs.existsSync(cssDirPath)) {
-  //     fs.mkdirSync(cssDirPath);
+  //     safeMkdir(cssDirPath);
   //   }
-  fs.writeFileSync(path.join(cssDirPath, "styles.css"), `@import "tailwindcss"`);
+  safeWriteFile(path.join(cssDirPath, "styles.css"), `@import "tailwindcss"`);
   console.log("✅ Tailwind CSS import added to src/styles.css.");
 
 
@@ -405,7 +425,7 @@ async function addLinterAndFormatter(projectPath) {
     },
 };
 `;
-        fs.writeFileSync(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
+        safeWriteFile(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
 
         // Create .prettierrc.json
         console.log("📝 Creating .prettierrc.json configuration file...");
@@ -416,7 +436,7 @@ async function addLinterAndFormatter(projectPath) {
     "singleQuote": true,
     "trailingComma": "es5"
 }`;
-        fs.writeFileSync(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
+        safeWriteFile(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
         
         // Update .gitignore
         const gitignorePath = path.join(projectPath, '.gitignore');
@@ -425,7 +445,7 @@ async function addLinterAndFormatter(projectPath) {
 # Linter and Formatter
 .eslintcache
 `;
-        fs.writeFileSync(gitignorePath, gitignoreContent);
+        safeWriteFile(gitignorePath, gitignoreContent);
 
         console.log("✅ ESLint and Prettier have been successfully configured!");
     }
@@ -454,7 +474,7 @@ async function main() {
   try {
     // Calling environment checks func
     checkEnvironment();
-    
+
     let projectType;
     let projectNameFromArgs = null;
     const args = process.argv.slice(2); // Get command line arguments
@@ -570,7 +590,7 @@ async function main() {
 
     // Project creation logic based on type
     if (projectType === "simple") {
-      fs.mkdirSync(projectPath);
+      safeMkdir(projectPath);
       createSimpleHtmlCssProject(projectName, projectPath);
     } else if (projectType === "js") {
       // Vite handles folder creation, so we don't call fs.mkdirSync here
@@ -587,7 +607,7 @@ async function main() {
     runCommand("git init", { cwd: projectPath }); // Ensure git init is in the new project path
 
     const gitignoreContent = `/node_modules\n/dist\n/.env\n`; // Added /dist and /.env for Vite projects
-    fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignoreContent);
+    safeWriteFile(path.join(projectPath, ".gitignore"), gitignoreContent);
 
     // Linter and Formatter
     await addLinterAndFormatter(projectPath);
