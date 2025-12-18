@@ -556,7 +556,9 @@ async function main() {
         console.error(
           `❌ Error: Invalid project name provided via argument: '${projectNameFromArgs}'. Project name must contain only letters, numbers, hyphens, and underscores.`
         );
-        process.exit(1);
+        // Throw an error if the project name is invalid
+        throw new Error("Invalid project name. Use only letters, numbers, hyphens, or underscores.");
+
       }
     } else {
       // If no project name was provided via arguments, prompt the user
@@ -669,7 +671,11 @@ async function main() {
         "❌ Error: The current environment does not support interactive prompts. Please run this in a compatible terminal (e.g., Bash, Zsh, PowerShell)."
       );
     } else {
-      console.error("❌ An unexpected error occurred:", error);
+      // Handle unexpected errors
+      console.error("\nRTPA failed to complete the operation.");
+      console.error(`Reason: ${error.message}`);
+      console.error("Tip: Check your environment and try again.\n");
+      process.exit(1);
     }
   }
 }
