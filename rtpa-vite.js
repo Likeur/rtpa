@@ -17,6 +17,8 @@ console.log(
         ***  ***           ***       ***          *********** // Angular
         ***   ***          ***       ***          ***     *** // vite
         ***    ***         ***       ***          ***     *** (@by likeur)
+        ***                ***       ********     *********** // Astro
+
     `
 );
 console.log("✨ Welcome to the Ready Tailwindcss Project Assistant Tool!");
@@ -106,18 +108,18 @@ function createSimpleHtmlCssProject(projectName, projectPath) {
   let dependencies = ["tailwindcss @tailwindcss/cli"];
   console.log("🔧 Installation des dépendances de développement...");
   execSync(`npm install -D ${dependencies.join(" ")}`, { stdio: "inherit" });
-  
+
   // Creation of base file structure
   fs.mkdirSync(path.join(projectPath, "css"));
   fs.mkdirSync(path.join(projectPath, "img"));
-  
+
   // Creation of the input.css file
   fs.writeFileSync(
     path.join(projectPath, "css", "input.css"),
     `@import "tailwindcss"`
   );
-  
-  
+
+
   // Adding script
   const scriptName = "start";
   const scriptCommand =
@@ -341,29 +343,127 @@ function createAngularTailwindProject(projectName, projectPath) {
 }
 
 /**
+ * Creates an Astro project with Tailwind CSS v4.
+ * @param {string} projectName The name of the project.
+ * @param {string} projectPath The absolute path of the project.
+ */
+function createAstroTailwindProject(projectName, projectPath) {
+  console.log("📦 Creating Astro project...");
+
+  // Create new Astro project
+  // using --template minimal to start fresh, --no-install to install dependencies manually later, --no-git to handle git separately, --yes to skip prompts
+  execSync(
+    `npm create astro@latest ${projectName} -- --template minimal --no-install --no-git --yes`,
+    {
+      stdio: "inherit",
+    }
+  );
+
+  process.chdir(projectPath);
+
+  // Install dependencies (including astro)
+  console.log("📦 Installing dependencies...");
+  execSync("npm install", {
+    cwd: projectPath,
+    stdio: "inherit",
+  });
+
+  // Install Tailwind CSS dependencies
+  console.log("🔧 Installing Tailwind CSS dependencies for Astro...");
+  execSync("npm install tailwindcss @tailwindcss/vite", {
+    cwd: projectPath,
+    stdio: "inherit",
+  });
+
+  // Update astro.config.mjs
+  console.log("⚙️ Configuring astro.config.mjs...");
+  const astroConfigContent = `import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+
+// https://astro.build/config
+export default defineConfig({
+  vite : {
+    plugins: [tailwindcss()],
+  },
+});
+`;
+  fs.writeFileSync(path.join(projectPath, "astro.config.mjs"), astroConfigContent);
+
+  // Create src/styles.css
+  const srcDirPath = path.join(projectPath, "src");
+  console.log("📝 Creating global styles...");
+  fs.writeFileSync(path.join(srcDirPath, "styles.css"), `@import "tailwindcss";`);
+
+  // Update src/pages/index.astro
+  console.log("📝 Updating index.astro...");
+  const indexAstroContent = `---
+import '../styles.css';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>${projectName}</title>
+	</head>
+	<body class="p-4 h-screen flex items-center justify-center bg-gray-50">
+		<main class="container mx-auto px-4 flex flex-col items-center gap-4">
+			<p class="text-center bg-orange-600/10 text-sm p-1 px-3 rounded-full text-orange-600">
+				Template Rtpa Astro for ${projectName}
+			</p>
+			<h1 class="text-center text-3xl lg:text-5xl font-bold lg:w-[60%] text-gray-900">
+				Focus on shipping what matter the most. Happy coding to you mate.
+			</h1>
+			<p class="text-zinc-500">
+				coded with love by
+				<a href="https://github.com/Likeur" class="underline text-orange-500">Likeur</a>
+			</p>
+		</main>
+	</body>
+</html>
+`;
+  fs.writeFileSync(path.join(srcDirPath, "pages", "index.astro"), indexAstroContent);
+
+  console.log(
+    "\n✅ Astro project with Tailwind CSS v4 created successfully!"
+  );
+  console.log("🚀 To get started, follow these steps:");
+  console.log(`1. Navigate to the folder: \`cd ${projectName}\``);
+  console.log(
+    "2. Launch the development server: `npm run dev`"
+  );
+  console.log(
+    "3. Open your browser at the address indicated by Astro (usually `http://localhost:4321/`)."
+  );
+}
+
+
+/**
  * Adds and configures a linter and formatter to the project.
  * @param {string} projectPath The absolute path of the project.
  */
 async function addLinterAndFormatter(projectPath) {
-    const wantLinting = await confirm({
-        message: "Do you want to add a linter (ESLint) and a formatter (Prettier) to your project?",
-        default: true,
+  const wantLinting = await confirm({
+    message: "Do you want to add a linter (ESLint) and a formatter (Prettier) to your project?",
+    default: true,
+  });
+
+  if (wantLinting) {
+    console.log("\n🔧 Configuring ESLint and Prettier...");
+
+    // Install dependencies
+    const devDependencies = ["eslint", "prettier", "eslint-config-prettier"];
+    console.log("📦 Installing ESLint and Prettier...");
+    execSync(`npm install -D ${devDependencies.join(" ")}`, {
+      cwd: projectPath,
+      stdio: "inherit",
     });
 
-    if (wantLinting) {
-        console.log("\n🔧 Configuring ESLint and Prettier...");
-
-        // Install dependencies
-        const devDependencies = ["eslint", "prettier", "eslint-config-prettier"];
-        console.log("📦 Installing ESLint and Prettier...");
-        execSync(`npm install -D ${devDependencies.join(" ")}`, {
-            cwd: projectPath,
-            stdio: "inherit",
-        });
-
-        // Create .eslintrc.js
-        console.log("📝 Creating .eslintrc.js configuration file...");
-        const eslintConfigContent = `module.exports = {
+    // Create .eslintrc.js
+    console.log("📝 Creating .eslintrc.js configuration file...");
+    const eslintConfigContent = `module.exports = {
     env: {
         browser: true,
         es2021: true,
@@ -382,30 +482,30 @@ async function addLinterAndFormatter(projectPath) {
     },
 };
 `;
-        fs.writeFileSync(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
+    fs.writeFileSync(path.join(projectPath, '.eslintrc.js'), eslintConfigContent);
 
-        // Create .prettierrc.json
-        console.log("📝 Creating .prettierrc.json configuration file...");
-        const prettierConfigContent = `{
+    // Create .prettierrc.json
+    console.log("📝 Creating .prettierrc.json configuration file...");
+    const prettierConfigContent = `{
     "semi": true,
     "tabWidth": 2,
     "printWidth": 80,
     "singleQuote": true,
     "trailingComma": "es5"
 }`;
-        fs.writeFileSync(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
-        
-        // Update .gitignore
-        const gitignorePath = path.join(projectPath, '.gitignore');
-        let gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
-        gitignoreContent += `
+    fs.writeFileSync(path.join(projectPath, '.prettierrc.json'), prettierConfigContent);
+
+    // Update .gitignore
+    const gitignorePath = path.join(projectPath, '.gitignore');
+    let gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    gitignoreContent += `
 # Linter and Formatter
 .eslintcache
 `;
-        fs.writeFileSync(gitignorePath, gitignoreContent);
+    fs.writeFileSync(gitignorePath, gitignoreContent);
 
-        console.log("✅ ESLint and Prettier have been successfully configured!");
-    }
+    console.log("✅ ESLint and Prettier have been successfully configured!");
+  }
 }
 
 
@@ -419,6 +519,7 @@ async function main() {
     const viteFlagIndex = args.indexOf("--js");
     const simpleFlagIndex = args.indexOf("--simple");
     const angularFlagIndex = args.indexOf("--angular");
+    const astroFlagIndex = args.indexOf("--astro");
 
     if (viteFlagIndex !== -1) {
       projectType = "js";
@@ -455,6 +556,17 @@ async function main() {
       console.log(
         "Directly creating an Angular project as requested by '--angular' argument."
       );
+    } else if (astroFlagIndex !== -1) {
+      projectType = "astro";
+      if (
+        args.length > astroFlagIndex + 1 &&
+        !args[astroFlagIndex + 1].startsWith("--")
+      ) {
+        projectNameFromArgs = args[astroFlagIndex + 1];
+      }
+      console.log(
+        "Directly creating an Astro project as requested by '--astro' argument."
+      );
     } else {
       // If no specific argument, prompt the user for project type
       projectType = await select({
@@ -477,6 +589,12 @@ async function main() {
             value: "angular",
             description:
               "Creates an Angular project and integrates Tailwind CSS v4.",
+          },
+          {
+            name: "Astro Project + Tailwind CSS v4",
+            value: "astro",
+            description:
+              "Creates a complete Astro project configured with Tailwind CSS v4.",
           },
         ],
       });
@@ -502,8 +620,10 @@ async function main() {
           projectType === "js"
             ? "my-vite-tailwind-project"
             : projectType === "angular"
-            ? "my-angular-tailwind-project"
-            : "my-simple-tailwind-project",
+              ? "my-angular-tailwind-project"
+              : projectType === "astro"
+                ? "my-astro-tailwind-project"
+                : "my-simple-tailwind-project",
         validate: (value) => {
           if (/^([A-Za-z0-9\-\_])+$/.test(value)) {
             return true;
@@ -532,7 +652,9 @@ async function main() {
       // Vite handles folder creation, so we don't call fs.mkdirSync here
       createViteTailwindProject(projectName, projectPath);
     } else if (projectType === "angular") {
-        createAngularTailwindProject(projectName, projectPath);
+      createAngularTailwindProject(projectName, projectPath);
+    } else if (projectType === "astro") {
+      createAstroTailwindProject(projectName, projectPath);
     } else {
       console.error("Unrecognized project type.");
       process.exit(1);
@@ -595,6 +717,14 @@ async function main() {
         console.log("2. Launch the development server: `npm run start` or `ng serve`");
         console.log(
           "3. Open your browser at the address indicated by Angular (usually `http://localhost:4200/`)."
+        );
+      } else if (projectType === "astro") {
+        console.log("\n✅ Project created successfully!");
+        console.log("🚀 To get started, follow these steps:");
+        console.log(`1. Navigate to the folder: \`cd ${projectName}\``);
+        console.log("2. Launch the development server: `npm run dev`");
+        console.log(
+          "3. Open your browser at the address indicated by Astro (usually `http://localhost:4321/`)."
         );
       }
     }
