@@ -17,6 +17,10 @@ RTPA (Ready Tailwind Project Assistant) is a command-line tool designed to simpl
 
     - Project with the **Angular framework**.
 
+    - Project with the **Astro framework**.
+
+    - Project with the **Nuxt framework**.
+
 * **Tailwind CSS Integration:** Automatically configures Tailwind CSS v4 for your project adapted on your choosen type.
 
 * **Automatic configuration of a linter and a formatter** (ESLint and Prettier), ensuring code quality and consistency from the start.
@@ -55,8 +59,8 @@ Run the command without any arguments to choose the project type and name via in
 rtpa
 ```
 
-2. **Direct project creation**
-Use the `--js` or `--angular` flags to directly specify the project type. You can also provide the project name immediately after the flag.
+3. **Direct project creation**
+Use the `--js`, `--angular`, `--astro` or `--nuxt` flags to directly specify the project type. You can also provide the project name immediately after the flag.
 
 - Create a **simple html/css** project:
 
@@ -73,7 +77,20 @@ rtpa --js project-name
 - Create an **Angular** project
 
 ```bash
+
 rtpa --angular project-name
+```
+
+- Create an **Astro** project
+
+```bash
+rtpa --astro project-name
+```
+
+- Create a **Nuxt** project
+
+```bash
+rtpa --nuxt project-name
 ```
 
 if `project-name` is omitted, the tool will prompt you for it.
@@ -97,7 +114,14 @@ npx rtpa --simple [project-name]
 npx rtpa --js [project-name]
 ```
 ```bash
+
 npx rtpa --angular [project-name]
+```
+```bash
+npx rtpa --astro [project-name]
+```
+```bash
+npx rtpa --nuxt [project-name]
 ```
 
 ## Linter and Formatter Configuration
@@ -135,6 +159,16 @@ Once your project is created, follow the instructions displayed in your terminal
 1. Navigate to your project folder: cd [project-name]
 2. Launch the Vite development server: npm run dev
 3. Open your browser to the local address indicated by Vite (usually http://localhost:5173/).
+
+### For an Astro Project:
+1. Navigate to your project folder: `cd [project-name]`
+2. Launch the dev server: `npm run dev`
+3. Open your browser usually at http://localhost:4321/
+
+### For a Nuxt Project:
+1. Navigate to your project folder: `cd [project-name]`
+2. Launch the dev server: `npm run dev`
+3. Open your browser usually at http://localhost:3000/
 
 ## Contribution
 Contributions are welcome! Feel free to open issues or submit pull requests.
